@@ -54,8 +54,15 @@ Raw Network Flow CSV (CIC-IDS2017 / UNSW-NB15 / Synthetic)
 - **`prepare_feature_matrix(df, ...)`**: Partitions data into numeric feature matrix $X$ and target label series $y$. Strictly excludes identifier columns (`src_ip`, `dst_ip`, `flow_id`, timestamps) to avoid data leakage.
 
 ### 3. `create_time_windows.py`
-- **`create_sliding_time_windows(df, window_size_sec, stride_sec, ...)`**: Sorts network flows chronologically and aggregates flow metrics within discrete temporal windows $[t_i, t_i + W)$. 
-- Computes aggregate flow statistics, window flow counts, and attack ratios without leaking future timestamps into the current window.
+- **`create_sliding_time_windows(df, window_size_sec, stride_sec, ...)`**: Sorts network flows chronologically and aggregates flow metrics within discrete temporal windows $[t_i, t_i + W)$.
+- **Temporal Feature Semantics:**
+  - **No Port / Protocol Averages:** Ports and protocols are categorical/discrete. The pipeline strictly excludes `src_port`, `dst_port`, and `protocol` from arithmetic averaging.
+  - **`unique_src_ports`**: Number of distinct source ports observed in the window (detects distributed attacks and client diversity).
+  - **`unique_dst_ports`**: Number of distinct destination ports targeted in the window (detects horizontal port sweeps and service reconnaissance).
+  - **`dst_port_entropy`**: Shannon entropy $H(X) = -\sum p(x) \log_2(p(x))$ across the destination port distribution (quantifies dispersion across network services).
+  - **`tcp_ratio` & `udp_ratio`**: Proportion of flows using TCP (protocol 6 / "tcp") and UDP (protocol 17 / "udp") respectively.
+- **Strict Label & Target Isolation:**
+  - `has_attack`, `attack_flow_ratio`, and `dominant_label` are strictly isolated into `window_labels_df` as ground-truth target metadata. They are **never** included in `windows_df` or feature matrix $X$ to prevent target leakage.
 
 ### 4. `run_pipeline.py`
 - CLI runner that accepts raw CSV input, runs all 3 pipeline stages, and exports:

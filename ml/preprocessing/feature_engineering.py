@@ -33,6 +33,9 @@ DEFAULT_METADATA_COLUMNS: Set[str] = {
     "stime",
     "ltime",
     "datetime",
+    "src_port",
+    "source_port",
+    "sport",
 }
 
 

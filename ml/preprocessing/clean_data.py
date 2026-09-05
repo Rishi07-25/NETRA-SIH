@@ -171,8 +171,32 @@ def clean_network_dataframe(
         detected_time = identify_timestamp_column(cleaned)
 
     if detected_time and detected_time in cleaned.columns:
+        time_series = cleaned[detected_time]
         try:
-            cleaned[detected_time] = pd.to_datetime(cleaned[detected_time])
+            # Check if numeric epoch seconds/milliseconds
+            if pd.api.types.is_numeric_dtype(time_series):
+                # If values > 1e11, likely milliseconds; if between 1e8 and 1e11, seconds
+                sample_numeric = time_series.dropna()
+                if not sample_numeric.empty:
+                    val = float(sample_numeric.iloc[0])
+                    if val > 1e11:
+                        cleaned[detected_time] = pd.to_datetime(time_series, unit="ms", errors="coerce")
+                    else:
+                        cleaned[detected_time] = pd.to_datetime(time_series, unit="s", errors="coerce")
+                else:
+                    cleaned[detected_time] = pd.to_datetime(time_series, unit="s", errors="coerce")
+            else:
+                # Try parsing as standard datetime string
+                # If numeric values stored as strings, check first
+                sample_str = str(time_series.dropna().iloc[0]).strip() if not time_series.dropna().empty else ""
+                if sample_str.replace(".", "", 1).isdigit():
+                    num_val = float(sample_str)
+                    if num_val > 1e11:
+                        cleaned[detected_time] = pd.to_datetime(pd.to_numeric(time_series, errors="coerce"), unit="ms")
+                    else:
+                        cleaned[detected_time] = pd.to_datetime(pd.to_numeric(time_series, errors="coerce"), unit="s")
+                else:
+                    cleaned[detected_time] = pd.to_datetime(time_series, errors="coerce")
         except Exception as err:
             logger.warning(f"Could not convert timestamp column '{detected_time}' to datetime: {err}")
 
@@ -191,15 +215,17 @@ def clean_network_dataframe(
 
         # Try converting string/object numbers into numeric
         if cleaned[col].dtype == object:
-            # Check if column is an IP or text
-            sample_val = str(cleaned[col].dropna().iloc[0]) if not cleaned[col].dropna().empty else ""
-            if "." in sample_val and any(c.isalpha() for c in sample_val):
+            # Check if column is an IP address
+            sample_val = str(cleaned[col].dropna().iloc[0]).strip() if not cleaned[col].dropna().empty else ""
+            if sample_val.count(".") == 3 and all(p.isdigit() for p in sample_val.split(".")):
                 continue
-            if "." in sample_val and sample_val.count(".") == 3:  # Likely IPv4
+            # Check if column is purely alphabetic categorical (e.g. proto names like 'tcp', 'udp')
+            if sample_val.isalpha() and sample_val.lower() in {"tcp", "udp", "icmp", "http", "dns", "arp", "igmp"}:
                 continue
-            # Try numeric coercion
-            converted = pd.to_numeric(cleaned[col], errors="ignore")
-            if pd.api.types.is_numeric_dtype(converted):
+            # Try safe numeric coercion for potential numbers or 'Infinity' strings
+            converted = pd.to_numeric(cleaned[col], errors="coerce")
+            # If at least some values successfully converted to numeric and not all NaN
+            if not converted.isna().all():
                 cleaned[col] = converted
 
         if pd.api.types.is_numeric_dtype(cleaned[col]):
