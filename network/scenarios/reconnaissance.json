@@ -1,0 +1,18 @@
+{
+  "scenario_name": "stealth_reconnaissance_probe",
+  "description": "Slow horizontal IP sweep followed by vertical service port scans.",
+  "duration_seconds": 600,
+  "stages": [
+    {
+      "time_offset_seconds": 0,
+      "type": "horizontal_ping_sweep",
+      "intensity": "low"
+    },
+    {
+      "time_offset_seconds": 240,
+      "type": "stealth_syn_port_scan",
+      "intensity": "moderate"
+    }
+  ],
+  "expected_attack_family": "Reconnaissance"
+}

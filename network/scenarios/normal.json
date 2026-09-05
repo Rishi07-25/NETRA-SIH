@@ -1,0 +1,11 @@
+{
+  "scenario_name": "normal_enterprise_baseline",
+  "description": "Baseline background traffic representing standard enterprise operations.",
+  "duration_seconds": 300,
+  "traffic_profile": {
+    "web_browsing_ratio": 0.65,
+    "dns_queries_ratio": 0.20,
+    "internal_services_ratio": 0.15
+  },
+  "expected_attack_probability": 0.0
+}

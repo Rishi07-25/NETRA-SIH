@@ -1,0 +1,18 @@
+{
+  "scenario_name": "recon_to_credential_escalation",
+  "description": "Port reconnaissance pivoting into sustained SSH/RDP credential brute forcing.",
+  "duration_seconds": 900,
+  "stages": [
+    {
+      "time_offset_seconds": 0,
+      "type": "port_scan",
+      "target_port": 22
+    },
+    {
+      "time_offset_seconds": 300,
+      "type": "ssh_dictionary_brute_force",
+      "rate_per_sec": 15
+    }
+  ],
+  "expected_attack_family": "Brute Force"
+}

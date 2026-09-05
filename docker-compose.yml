@@ -1,0 +1,59 @@
+version: '3.8'
+
+# =============================================================================
+# NETRA Architecture Placeholder
+# Note: These services represent the intended system composition and will be
+# fully implemented and configured during the development phases.
+# =============================================================================
+
+services:
+  # Backend API Service (FastAPI)
+  backend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.backend
+    container_name: netra_backend
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DATABASE_URL=${DATABASE_URL:-postgresql://netra_user:netra_pass@db:5432/netra_db}
+      - MODEL_PATH=/app/ml/models
+    volumes:
+      - ./backend:/app/backend
+      - ./ml/models:/app/ml/models
+    depends_on:
+      - db
+
+  # Frontend Web UI / SOC Dashboard (React + Vite/Tailwind)
+  frontend:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile.frontend
+    container_name: netra_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # Relational Database (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: netra_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: netra_user
+      POSTGRES_PASSWORD: netra_pass
+      POSTGRES_DB: netra_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - netra_db_data:/var/lib/postgresql/data
+
+volumes:
+  netra_db_data:
+    driver: local
