@@ -64,7 +64,16 @@ RAW NETWORK TRAFFIC / FLOW TELEMETRY (CIC-IDS2017)
   - **Operational Attack-Stage Taxonomy:** Maps attack types into tactical stages (Normal, Reconnaissance, Initial Access, Exploitation, Lateral Movement, Impact).
   > **Taxonomy Disclaimer:** Attack stage is a NETRA-derived operational taxonomy, not a ground-truth label directly provided by the dataset.
 
-## 4. Stage 3B: Temporal World Model (Future Implementation)
-- **Purpose:** Sequence-to-sequence neural model forecasting attack occurrence and stage transition ahead of execution.
-- **Planned Models:** LSTM, GRU, or Temporal Convolutional Networks.
-- **Target Horizons:** 1-step, 3-step, 5-step ahead forecasting.
+## 4. Stage 3B: Temporal World Model & Autoregressive State Rollout
+- **Stage 3B.1 (Temporal Forecasting Foundation):**
+  - Sequence-to-threat neural network forecasting future attack dynamics at horizon $t + H$.
+  - 2-layer LSTM temporal encoder (`input_size=19`, `hidden_size=64`, `dropout=0.2`) extracting a 64-dimensional latent network-state embedding.
+  - Forecasting heads: `future_attack_binary`, `future_attack_type`, `future_attack_stage`, `future_attack_risk_score`.
+- **Stage 3B.2 (World Model + Autoregressive Rollout):**
+  - Predicts continuous standardized future network state $\hat{S}_{t+1} \in \mathbb{R}^{19}$ via `head_state` (`Linear(64, 64) -> ReLU -> Dropout(0.2) -> Linear(64, 19)`).
+  - Multi-task loss: $w_{\text{state}} L_{\text{state}} + w_{\text{bin}} L_{\text{binary}} + w_{\text{type}} L_{\text{type}} + w_{\text{stage}} L_{\text{stage}} + w_{\text{risk}} L_{\text{risk}}$ with configurable weights (defaults: state=1.0, binary=1.0, type=1.0, stage=1.0, risk=2.0).
+  - Benign attribution masking: masks $L_{\text{type}}$ and $L_{\text{stage}}$ when `binary_target == 0` to eliminate semantic penalty on benign background flows.
+  - Recursive state simulation: shifts predicted states $\hat{S}_{t+k}$ into the input sequence to project network evolution and threat indicators over horizons $K \in \{1, 2, 3, 5\}$ without ground-truth teacher forcing.
+  - Persistence baseline: compares LSTM multi-step trajectory against static persistence baseline ($\hat{S}_{t+k} = S_t$) to validate predictive progression.
+- **Distinction:** `future_attack_probability` reflects model confidence of an attack occurring, whereas `future_attack_risk_score` measures expected attack traffic volume density.
+- **Limitation:** Tested on synthetic development fixtures. Real-world benchmark performance awaits full local CIC-IDS2017 ingestion.
