@@ -7,6 +7,7 @@ This directory stores datasets utilized for training, evaluating, and testing NE
 - `raw/`: Unaltered, original external network datasets (e.g., CIC-IDS2017, CSE-CIC-IDS2018, UNSW-NB15). Large files in this directory are git-ignored.
 - `processed/`: Cleaned and standardized datasets produced by `ml/preprocessing/clean_data.py`. Infinite values are imputed, duplicates removed, and labels canonicalized.
 - `features/`: Engineered tabular feature representations (`features_X.csv`, `labels_y.csv`) and time-windowed aggregated matrices (`time_windows.csv`) ready for model consumption.
+- `temporal/`: Stage 3A temporal forecasting artifacts (`temporal_states.csv`, `train_sequence_metadata.csv`, `train_forecast_targets.csv`, `stage3a_validation_report.json`). Large generated CSVs are git-ignored.
 - `samples/`: Lightweight sample extracts (<1MB) used for local debugging and continuous testing. Contains `synthetic_network_flows.csv`.
 
 ## Storage & Version Control Guidelines

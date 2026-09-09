@@ -27,6 +27,14 @@ The `ml/` directory encapsulates NETRA's multi-stage machine learning architectu
 - `anomaly_detection/`:
   - `train.py`: Unsupervised Isolation Forest model fitted **strictly on features $X$ without labels**.
   - `predict.py`: Anomaly prediction interface exposing raw decision scores and normalized display scores.
+- `forecasting/` (STAGE 3A):
+  - `schema.py`: Canonical schema definitions, column aliases (CIC-IDS2017 & UNSW-NB15), label normalization, and operational attack-stage taxonomy.
+  - `dataset_loader.py`: Real-world dataset loader supporting single/multi-CSV/Parquet ingestion, flexible timestamp normalization, and data health auditing.
+  - `temporal_state.py`: Formulates aggregate behavioral state $S_t$ over half-open windows $[t, t + \Delta)$ with 18 predictive features and quarantined target metadata.
+  - `sequence_builder.py`: Constructs sliding sequence tensors $X_t \in \mathbb{R}^{N \times L \times D}$ paired with temporal window observation metadata.
+  - `targets.py`: Extracts future targets $y_{t+H}$ (binary, canonical category, operational attack stage, attack risk score $\in [0, 1]$).
+  - `temporal_split.py`: Partition-first chronological and day-based splitting with preprocessing isolation (scaler fitted strictly on training data).
+  - `validate_dataset.py`: Comprehensive temporal dataset quality auditor and artifact exporter.
 - `evaluation/`:
   - `metrics.py`: Calculation of multiclass macro/weighted F1, recall, precision, and anomaly FPR.
   - `evaluate.py`: Multi-model evaluation harness exporting JSON metrics, confusion matrices, and feature importance.
