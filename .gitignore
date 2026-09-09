@@ -59,6 +59,8 @@ data/features/*
 data/samples/*
 !data/samples/.gitkeep
 !data/samples/synthetic_network_flows.csv
+data/temporal/*
+!data/temporal/.gitkeep
 network/pcaps/*
 !network/pcaps/.gitkeep
 *.csv
