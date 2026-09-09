@@ -1,13 +1,28 @@
 # Frontend SOC Dashboard
 
 ## Overview
-The `frontend/` directory contains the React application providing an interactive Security Operations Center (SOC) dashboard. It displays live network metrics, early-warning risk projections, threat score timelines, and active incident tables.
+The `frontend/` directory contains the React application providing an interactive Security Operations Center (SOC) dashboard. It displays live network metrics, early-warning risk projections, threat score timelines, and active incident tables communicating with the NETRA FastAPI backend.
 
-## Architecture
-- `src/components/`: Modular UI widgets (threat score gauge, forecast cards, timeline, attack table, live event stream).
-- `src/pages/`: Page containers (primary `Dashboard.jsx`).
-- `src/services/`: HTTP client (`api.js`) communicating with backend REST endpoints.
-- `public/`: Static assets and favicon files.
+## Architecture & Components
+- `src/components/ThreatScore.jsx`: Visual threat severity gauge and status badges.
+- `src/components/ForecastCard.jsx`: Multi-horizon forward risk probability and attack stage cards.
+- `src/components/NetworkStats.jsx`: Real-time packet throughput, bandwidth, and anomaly rate cards.
+- `src/components/ThreatTimeline.jsx`: Chronological attack trajectory bar chart and trend indicator.
+- `src/components/AttackTable.jsx`: Active incident classifications and attribution table.
+- `src/components/EventFeed.jsx`: Early-warning security alert stream.
+- `src/pages/Dashboard.jsx`: Central operational dashboard container.
+- `src/services/api.js`: Asynchronous REST client for FastAPI endpoints.
 
-## Primary Owner
-**Workstream 5: Frontend/SOC Dashboard**
+## Local Development & Build
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start Vite development server
+npm run dev
+
+# Build production bundle
+npm run build
+```

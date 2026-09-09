@@ -136,20 +136,20 @@ To ensure collaborative and concurrent development across the 6-member team, wor
 
 ## 🚧 Development Status & Roadmap
 
-Current Milestone: **🚧 Initial Repository Setup**
+Current Milestone: **✅ Phase 2 (P2) Complete: AI Threat Engine, Forecasting Services, Network Simulation & SOC Dashboard**
 
-- [ ] Dataset selection & validation (e.g., CIC-IDS2017, CSE-CIC-IDS2018, UNSW-NB15)
-- [ ] Data preprocessing & cleaning pipelines
-- [ ] Flow-based feature engineering & rolling time-window generation
-- [ ] Baseline anomaly detection models
-- [ ] Multi-class attack classification models
-- [ ] Temporal risk forecasting engine
-- [ ] FastAPI backend services & endpoint development
-- [ ] SOC dashboard UI & visualization components
-- [ ] End-to-end pipeline integration
-- [ ] System evaluation & benchmark verification
-- [ ] Comprehensive demo rehearsal & scenario packaging
-- [ ] SIH final presentation & documentation delivery
+- [x] Dataset selection & validation (e.g., CIC-IDS2017, CSE-CIC-IDS2018, UNSW-NB15)
+- [x] Data preprocessing & cleaning pipelines
+- [x] Flow-based feature engineering & rolling time-window generation
+- [x] Baseline anomaly detection models (Isolation Forest)
+- [x] Multi-class attack classification models (Random Forest & Logistic Regression)
+- [x] Temporal risk forecasting engine (LSTM Temporal World Model v2)
+- [x] FastAPI backend services & endpoint development (`/predict`, `/forecast`, `/anomaly`, `/network/stats`, `/events`)
+- [x] SOC dashboard UI & visualization components (React, Tailwind CSS, Vite)
+- [x] End-to-end pipeline integration
+- [x] System evaluation & benchmark verification
+- [x] Comprehensive demo rehearsal & scenario packaging (`run_demo.py`)
+- [ ] SIH final presentation & production hardening (Phase 3)
 
 ---
 
