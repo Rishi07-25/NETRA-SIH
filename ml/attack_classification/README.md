@@ -4,7 +4,7 @@
 This module classifies suspicious network behaviors into recognized threat categories (such as `BENIGN`, `Reconnaissance`, `Brute Force`, and `DDoS`).
 
 ## Components
-- `baseline.py`: Logistic Regression benchmark model with `StandardScaler` and `class_weight='balanced'`. Serves as the conventional baseline required for SIH evaluations.
+- `baseline.py`: Logistic Regression benchmark model with `ColumnTransformer` (`OneHotEncoder` for nominal protocol identifiers and `StandardScaler` for continuous numeric features) and `class_weight='balanced'`. Serves as the conventional baseline required for SIH evaluations.
 - `train.py`: Primary Random Forest attack classifier (`n_estimators=200`, `random_state=42`).
 - `predict.py`: Standardized prediction interface (`AttackClassifierPredictor` and `predict_attack_class`) validating feature schemas and exposing full class probability distributions.
 

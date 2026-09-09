@@ -21,7 +21,7 @@ The `ml/` directory encapsulates NETRA's multi-stage machine learning architectu
 - `threat_engine.py`: Unified Threat Engine combining supervised classification and unsupervised anomaly detection with transparent heuristic threat levels.
 - `run_stage2.py`: End-to-end command-line orchestrator executing validation, splitting, baseline training, primary classification, anomaly detection, and evaluation.
 - `attack_classification/`:
-  - `baseline.py`: Conventional Logistic Regression benchmark pipeline with StandardScaler.
+  - `baseline.py`: Conventional Logistic Regression benchmark pipeline with `ColumnTransformer` (`OneHotEncoder` for protocol, `StandardScaler` for continuous features).
   - `train.py`: Primary Random Forest attack classifier.
   - `predict.py`: Standardized prediction interface exposing class probabilities, confidence, and schema validation.
 - `anomaly_detection/`:

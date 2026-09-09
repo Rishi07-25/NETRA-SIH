@@ -16,6 +16,8 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+import joblib
 
 from ml.anomaly_detection.predict import AnomalyDetectorPredictor, predict_anomaly
 from ml.anomaly_detection.train import train_anomaly_detector
@@ -85,6 +87,99 @@ def test_logistic_regression_baseline_training(tmp_path):
     # Probabilities sum to 1
     total_prob = sum(sample_res["class_probabilities"].values())
     assert pytest.approx(total_prob, abs=1e-4) == 1.0
+
+
+def test_logistic_regression_protocol_is_categorical(tmp_path):
+    """TEST 1: Verify protocol is handled by OneHotEncoder and excluded from StandardScaler."""
+    X, y = load_and_validate_features(FEATURES_PATH, LABELS_PATH)
+    X_tr, _, y_tr, _ = split_threat_data(X, y, test_size=0.20, random_state=42)
+
+    save_file = tmp_path / "baseline_cat.joblib"
+    pipeline, bundle = train_baseline(X_tr, y_tr, random_state=42, save_path=save_file)
+
+    preprocessor = pipeline.named_steps["preprocessor"]
+    transformers = preprocessor.transformers_
+
+    # Find numeric and protocol transformers
+    numeric_trans = next(t for t in transformers if t[0] == "numeric")
+    protocol_trans = next(t for t in transformers if t[0] == "protocol")
+
+    # Verify protocol is NOT in numeric transformer features
+    numeric_features = numeric_trans[2]
+    assert "protocol" not in numeric_features
+
+    # Verify protocol IS in protocol transformer and uses OneHotEncoder
+    protocol_features = protocol_trans[2]
+    assert "protocol" in protocol_features
+    assert isinstance(protocol_trans[1], OneHotEncoder)
+    assert protocol_trans[1].handle_unknown == "ignore"
+
+
+def test_logistic_regression_unknown_protocol_handling(tmp_path):
+    """TEST 2: Verify predict_proba does not crash when encountering an unseen protocol."""
+    X, y = load_and_validate_features(FEATURES_PATH, LABELS_PATH)
+    X_tr, X_te, y_tr, y_te = split_threat_data(X, y, test_size=0.20, random_state=42)
+
+    save_file = tmp_path / "baseline_unknown_proto.joblib"
+    pipeline, _ = train_baseline(X_tr, y_tr, random_state=42, save_path=save_file)
+
+    # Inject an unseen protocol (e.g. 999 or 255)
+    unseen_row = X_te.iloc[[0]].copy()
+    unseen_row["protocol"] = 999
+
+    pred = AttackClassifierPredictor(save_file)
+    res = pred.predict_single(unseen_row.iloc[0])
+
+    assert "predicted_attack" in res
+    assert "class_probabilities" in res
+    total_prob = sum(res["class_probabilities"].values())
+    assert pytest.approx(total_prob, abs=1e-4) == 1.0
+
+
+def test_logistic_regression_existing_predictions_still_work(tmp_path):
+    """TEST 3: Verify predict() and predict_proba() return valid outputs with the 15-column schema."""
+    X, y = load_and_validate_features(FEATURES_PATH, LABELS_PATH)
+    X_tr, X_te, y_tr, y_te = split_threat_data(X, y, test_size=0.20, random_state=42)
+
+    save_file = tmp_path / "baseline_pred_work.joblib"
+    pipeline, bundle = train_baseline(X_tr, y_tr, random_state=42, save_path=save_file)
+
+    pred = AttackClassifierPredictor(save_file)
+
+    # Single prediction
+    single_res = pred.predict_single(X_te.iloc[0])
+    assert single_res["predicted_attack"] in bundle["classes"]
+    assert 0.0 <= single_res["confidence"] <= 1.0
+    assert len(single_res["class_probabilities"]) == len(bundle["classes"])
+
+    # Batch prediction
+    batch_res = pred.predict_batch(X_te)
+    assert len(batch_res) == len(X_te)
+    for r in batch_res:
+        assert r["predicted_attack"] in bundle["classes"]
+        assert pytest.approx(sum(r["class_probabilities"].values()), abs=1e-4) == 1.0
+
+
+def test_logistic_regression_model_persistence(tmp_path):
+    """TEST 4: Save the corrected model, reload it, and verify predictions remain consistent."""
+    X, y = load_and_validate_features(FEATURES_PATH, LABELS_PATH)
+    X_tr, X_te, y_tr, y_te = split_threat_data(X, y, test_size=0.20, random_state=42)
+
+    save_file = tmp_path / "persisted_baseline.joblib"
+    pipeline, _ = train_baseline(X_tr, y_tr, random_state=42, save_path=save_file)
+
+    # Load via AttackClassifierPredictor
+    pred1 = AttackClassifierPredictor(save_file)
+    res1 = pred1.predict_single(X_te.iloc[0])
+
+    # Re-load from disk directly and verify equivalence
+    reloaded_bundle = joblib.load(save_file)
+    pred2 = AttackClassifierPredictor(reloaded_bundle)
+    res2 = pred2.predict_single(X_te.iloc[0])
+
+    assert res1["predicted_attack"] == res2["predicted_attack"]
+    assert pytest.approx(res1["confidence"], abs=1e-6) == res2["confidence"]
+    assert res1["class_probabilities"] == res2["class_probabilities"]
 
 
 def test_random_forest_training_and_feature_importance(tmp_path):
